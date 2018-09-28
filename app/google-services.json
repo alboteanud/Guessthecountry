@@ -1,0 +1,237 @@
+{
+  "project_info": {
+    "project_number": "602107425684",
+    "firebase_url": "https://sights-and-sounds-3248f.firebaseio.com",
+    "project_id": "sights-and-sounds-3248f",
+    "storage_bucket": "sights-and-sounds-3248f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:602107425684:android:9e228f5263eece98",
+        "android_client_info": {
+          "package_name": "com.craiovadata.guessthecountry"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "602107425684-05a25h9erndutobgkfvopll330hv4v9n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.craiovadata.guessthecountry",
+            "certificate_hash": "6e1f8a3f1df97c6e34f7762255d50dabb8772f7c"
+          }
+        },
+        {
+          "client_id": "602107425684-2eg3okc53mq1a3u7e4ufdn0qichqtppi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUd-k6HbYQ9NT1xy_t4tQuD0UyOIpE2og"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "602107425684-2eg3okc53mq1a3u7e4ufdn0qichqtppi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:602107425684:android:98170e10f99361b8",
+        "android_client_info": {
+          "package_name": "com.craiovadata.sightsandsounds"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "602107425684-mtbpqi0er2fpiq0vdqb20ov85udms56t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.craiovadata.sightsandsounds",
+            "certificate_hash": "6e1f8a3f1df97c6e34f7762255d50dabb8772f7c"
+          }
+        },
+        {
+          "client_id": "602107425684-2eg3okc53mq1a3u7e4ufdn0qichqtppi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUd-k6HbYQ9NT1xy_t4tQuD0UyOIpE2og"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "602107425684-2eg3okc53mq1a3u7e4ufdn0qichqtppi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      },
+      "admob_app_id": "ca-app-pub-3931793949981809~9763575423"
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:602107425684:android:5ed04005a81d972e",
+        "android_client_info": {
+          "package_name": "com.craiovadata.sightsandsounds.add_config"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "602107425684-2eg3okc53mq1a3u7e4ufdn0qichqtppi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUd-k6HbYQ9NT1xy_t4tQuD0UyOIpE2og"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:602107425684:android:ee32b9f5c3be1166",
+        "android_client_info": {
+          "package_name": "com.craiovadata.sightsandsounds.original"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "602107425684-q2etccjdrj1bf7irem5jkupdfatvp6fl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.craiovadata.sightsandsounds.original",
+            "certificate_hash": "6e1f8a3f1df97c6e34f7762255d50dabb8772f7c"
+          }
+        },
+        {
+          "client_id": "602107425684-2eg3okc53mq1a3u7e4ufdn0qichqtppi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUd-k6HbYQ9NT1xy_t4tQuD0UyOIpE2og"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "602107425684-2eg3okc53mq1a3u7e4ufdn0qichqtppi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:602107425684:android:7fd027a9e80c3167",
+        "android_client_info": {
+          "package_name": "com.example.firestorage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "602107425684-2eg3okc53mq1a3u7e4ufdn0qichqtppi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUd-k6HbYQ9NT1xy_t4tQuD0UyOIpE2og"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:602107425684:android:c9233f5ef928aaec",
+        "android_client_info": {
+          "package_name": "com.example.mdc100series"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "602107425684-2eg3okc53mq1a3u7e4ufdn0qichqtppi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUd-k6HbYQ9NT1xy_t4tQuD0UyOIpE2og"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
