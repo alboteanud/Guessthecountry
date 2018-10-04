@@ -2,8 +2,5 @@
     <string name="app_name">Guess the country</string>
     <string name="output_message_correct_answer">%1$s is correct! \n%2$s</string>
     <string name="output_message_wrong_answer">Nope! The correct answer is %1$s</string>
-    <string name="title_next">Next country</string>
-    <string name="title_menu_item_sound">Play/Stop music</string>
     <string name="country_image">An image from this country</string>
-    <string name="loading_text">loading</string>
 </resources>

@@ -7,11 +7,11 @@ import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -45,12 +45,14 @@ import com.google.firebase.storage.StorageReference;
 import java.io.IOException;
 import java.util.Random;
 
-import javax.annotation.Nullable;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 import static com.craiovadata.guessthecountry.Utils.log;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity {
     private static final String SIGHTS_AND_SOUNDS_COLLECTION = "sights_and_sounds_";
     private static final String NUMBER_OF_COUNTRIES_KEY_REMOTE_CONFIG = "number_of_countries";
     private static final String COUNTRY_CODE_KEY = "country_code";
@@ -58,9 +60,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     static final String TAG = "MainActivity";
     private static final int CODE = 0;
     private static final int NAME = 1;
-    private View buttonA, buttonB;
-    private TextView textViewFlagA, textViewFlagB, textViewMessageOutput, textViewLoading;
-    private ImageView imageViewMain, flagA, flagB;
+
+    @BindView(R.id.textFlagA)
+    TextView textViewFlagA;
+
+    @BindView(R.id.textFlagB)
+    TextView textViewFlagB;
+
+    @BindView(R.id.textViewMessageOutput)
+    TextView textViewMessageOutput;
+
+    @BindView(R.id.countryView)
+    ImageView imageViewMain;
+
+    @BindView(R.id.flagA)
+    ImageView flagA;
+
+    @BindView(R.id.flagB)
+    ImageView flagB;
+
+    @BindView(R.id.adView)
+    AdView adView;
+
+    @BindView(R.id.progressBar)
+    ProgressBar progressBar;
+
+    @BindView(R.id.btn_play_music)
+    View btnSound;
+
+    @BindView(R.id.buttonA)
+    View btnA;
+
+    @BindView(R.id.buttonB)
+    View btnB;
+
+    @BindView(R.id.fab)
+    FloatingActionButton floatingActionButton;
+
+//    @BindView(R.id.imageViewSplash)
+//    ImageView imageViewSplash;
+//
+//    @BindView(R.id.textViewWellcome)
+//    TextView textViewWellcome;
+
     private MediaPlayer mediaPlayer;
     private Uri soundUri;
     private DocumentSnapshot documentCountry;
@@ -69,81 +111,91 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Random random;
     private InterstitialAd mInterstitialAd;
     private int fabClicks;
-    private AdView adView;
+
     private FirebaseAuth mAuth;
     private FirebaseFirestore firestore;
     private FirebaseStorage storage;
-    private ProgressBar progressBar;
+    private ListenerRegistration docListenerRegistration;
+    private int nr_docs_countries_firebase;
+    private static final int DELAY_FAB_ACTIVATION = 5 * 1000;
+    private Handler handler;
+    private Runnable runnableActivateFab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        initViews();
-        buttonA.setOnClickListener(this);
-        buttonB.setOnClickListener(this);
+//        Toolbar toolbar = findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
+        ButterKnife.bind(this);
 
-        countries = getResources().obtainTypedArray(R.array.countrycodes);
-
-        initFirebaseStuff();
+        initFirebase();
         initAds();
-
     }
 
-    private void initFirebaseStuff() {
+    @OnClick({R.id.fab})
+    public void onFabNextClicked(View view) {
+
+        if (mInterstitialAd.isLoaded() && fabClicks++ > 3)
+            mInterstitialAd.show();
+        else {
+            cleanUI();
+//            showSplashAssets(true);
+            fetchRandomDocument();
+        }
+    }
+
+    private void initFirebase() {
         mAuth = FirebaseAuth.getInstance();
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-        firestore = FirebaseFirestore.getInstance();
-        storage = FirebaseStorage.getInstance();
 
+        firestore = FirebaseFirestore.getInstance();
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
         firestore.setFirestoreSettings(settings);
-    }
 
-    private void initViews() {
-        buttonA = findViewById(R.id.buttonA);
-        buttonB = findViewById(R.id.buttonB);
-        flagA = findViewById(R.id.flagA);
-        flagB = findViewById(R.id.flagB);
-        textViewFlagA = findViewById(R.id.textFlagA);
-        textViewFlagB = findViewById(R.id.textFlagB);
-        textViewLoading = findViewById(R.id.textViewLoading);
-        imageViewMain = findViewById(R.id.countryView);
-        textViewMessageOutput = findViewById(R.id.textViewMessageOutput);
-        adView = findViewById(R.id.adView);
-        progressBar = findViewById(R.id.progressBar);
-        random = new Random();
+        storage = FirebaseStorage.getInstance();
+
+
+        signInAndInitApp();
     }
 
     private void initAds() {
         MobileAds.initialize(this, "ca-app-pub-3931793949981809~9763575423");
 
-        AdRequest request = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
-        adView.loadAd(request);
+        AdRequest requestBanner = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
+        adView.loadAd(requestBanner);
 
         mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId(Utils.getAdUnitId(random));
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
-        mInterstitialAd.loadAd(adRequest);
+        mInterstitialAd.setAdUnitId(Utils.getAdUnitId());
+        AdRequest requestInterstitial = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
+        if (!BuildConfig.DEBUG)
+            mInterstitialAd.loadAd(requestInterstitial);
 
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
             public void onAdClosed() {
                 // Code to be executed when when the interstitial ad is closed.
-                initNewCountry();
+                cleanUI();
+                fetchRandomDocument();
                 mInterstitialAd.loadAd(new AdRequest.Builder().build());
                 fabClicks = 0;
             }
         });
     }
 
-    private void initNewCountry() {
-        showProgressBar();
-//        fetchParamNumCountries()
+    private void initApp() {
+        random = new Random();
+        handler = new Handler();
+        runnableActivateFab = new Runnable() {
+            @Override
+            public void run() {
+                activateFab(true);
+            }
+        };
+        countries = getResources().obtainTypedArray(R.array.countrycodes);
+//        fetchParamNumCountries
         FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
                 .setDeveloperModeEnabled(BuildConfig.DEBUG)
                 .build();
@@ -154,14 +206,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        hideProgressBar();
                         if (task.isSuccessful()) {
                             mFirebaseRemoteConfig.activateFetched();
                         } else {
                             showErrorToast(task.getException());
                         }
-                        int num_countries = (int) mFirebaseRemoteConfig.getLong(NUMBER_OF_COUNTRIES_KEY_REMOTE_CONFIG);
-                        fetchRandomCountryDocument(num_countries);
+                        nr_docs_countries_firebase = (int) mFirebaseRemoteConfig.getLong(NUMBER_OF_COUNTRIES_KEY_REMOTE_CONFIG);
+                        fetchRandomDocument();
 
                     }
                 });
@@ -173,17 +224,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        });
     }
 
-    private void showProgressBar() {
-        progressBar.setVisibility(View.VISIBLE);
-        textViewLoading.setText(getString(R.string.loading_text));
+    private void showProgressBar(Boolean shouldShow) {
+        if (shouldShow) progressBar.setVisibility(View.VISIBLE);
+        else progressBar.setVisibility(View.INVISIBLE);
     }
 
-    private void hideProgressBar() {
-        progressBar.setVisibility(View.GONE);
-        textViewLoading.setText(null);
-    }
 
     private void cleanUI() {
+        btnSound.setVisibility(View.INVISIBLE);
         imageViewMain.setImageDrawable(null);
         flagA.setImageDrawable(null);
         flagB.setImageDrawable(null);
@@ -192,56 +240,74 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         textViewFlagB.setText(null);
         if (mediaPlayer != null)
             mediaPlayer.reset();
+        activateFab(false);
+
     }
 
-    private void fetchRandomCountryDocument(int num_countries) {
-        int r = random.nextInt(num_countries) + 2;
-//        r = 125;
-        final DocumentReference documentReference = firestore.collection(SIGHTS_AND_SOUNDS_COLLECTION)
-                .document(Integer.toString(r));
-
-
-//        ListenerRegistration fr = documentReference.addSnapshotListener(new EventListener<DocumentSnapshot>() {
-//            @Override
-//            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+//    private void showSplashAssets(Boolean shouldShow) {
+//        if (shouldShow) {
+//            imageViewSplash.setVisibility(View.VISIBLE);
+//            textViewWellcome.setVisibility(View.VISIBLE);
+//        } else {
+//            imageViewSplash.setVisibility(View.INVISIBLE);
+//            textViewWellcome.setVisibility(View.INVISIBLE);
+//        }
 //
-//            }
-//        });
-//
-//        fr.remove();
-        TODO - replace with .addSnapshotListener
+//    }
 
-        Task<DocumentSnapshot> fe = documentReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+    private void activateFab(Boolean shouldActivate) {
+        float alphaVal = shouldActivate ? 1f : 0f;
+        floatingActionButton.setAlpha(alphaVal);
+        floatingActionButton.setClickable(shouldActivate);
+        floatingActionButton.setEnabled(shouldActivate);
+
+    }
+
+
+    private void lateActivateFab() {
+        handler.removeCallbacks(runnableActivateFab);
+        handler.postDelayed(runnableActivateFab, DELAY_FAB_ACTIVATION);
+    }
+
+    private void fetchRandomDocument() {
+
+        showProgressBar(true);
+
+        int r = random.nextInt(nr_docs_countries_firebase) + 2;
+//        r=158;
+        final String r_s = Integer.toString(r);
+        final DocumentReference documentReference = firestore.collection(SIGHTS_AND_SOUNDS_COLLECTION).document(r_s);
+
+        if (docListenerRegistration != null)
+            docListenerRegistration.remove();
+        docListenerRegistration = documentReference.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot result = task.getResult();
-                    if (result.exists()) {
-                        documentCountry = result;
-                        final String imgLocation = "images/" + documentCountry.getId() + ".jpg";
-                        fetchImage(imgLocation, imageViewMain, true);
+            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+                showProgressBar(false);
+                lateActivateFab();
+                if (e != null) {
+                    log("Listen failed. " + e);
+                    return;
+                }
 
-                        log("country " + documentCountry.getString(COUNTRY_CODE_KEY) + " " + documentCountry.getString(COUNTRY_KEY) + " " + documentCountry.getId() + " img_loc: " + imgLocation);
+                if (documentSnapshot != null && documentSnapshot.exists()) {
+                    log("Current data: " + documentSnapshot.getData());
+
+                    documentCountry = documentSnapshot;
+                    docListenerRegistration.remove();
+
+                    final String imgLocation = "images/" + documentCountry.getId() + ".jpg";
+                    fetchImage(imgLocation, imageViewMain, true);
+
+                    log("code " + documentCountry.getString(COUNTRY_CODE_KEY) + " " + documentCountry.getString(COUNTRY_KEY) + " " + documentCountry.getId() + " img_loc: " + imgLocation);
 
 
-                    } else {
-                        log("No such documentCountry");
-
-                    }
                 } else {
-//                    showErrorToast(task.getException());
+                    log("Current data: null");
                 }
 
             }
         });
-//                .addOnFailureListener(new OnFailureListener() {
-//                    @Override
-//                    public void onFailure(@NonNull Exception e) {
-//                        showErrorToast(e);
-//                    }
-//                });
-
-
 
     }
 
@@ -263,15 +329,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String countryName = documentCountry.getString(COUNTRY_KEY);
         String locFlag_true = "flags_jpg/" + countryCode + ".jpg";
 
-
         final String[] wrongCountry = getRandomFakeCountry(countryCode);
         String locFlag_false = "flags_jpg/" + wrongCountry[CODE] + ".jpg";
 //       locFlag_false = "flags_jpg/NO.jpg";
 
         final boolean coin = random.nextBoolean();
         if (coin) {
-            buttonA.setTag(1);
-            buttonB.setTag(null);
+            btnA.setTag(true);
+            btnB.setTag(null);
 
             textViewFlagA.setText(countryName);
             textViewFlagB.setText(wrongCountry[NAME]);
@@ -279,8 +344,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             fetchImage(locFlag_true, flagA, false);
             fetchImage(locFlag_false, flagB, false);
         } else {
-            buttonA.setTag(null);
-            buttonB.setTag(1);
+            btnA.setTag(null);
+            btnB.setTag(true);
 
             textViewFlagA.setText(wrongCountry[NAME]);
             textViewFlagB.setText(countryName);
@@ -290,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void fetchMusic() {
+    private void fetchMusicUrl() {
         StorageReference ref = storage.getReference(
                 "sounds/" + documentCountry.getId() + "_x264.mp4");
         ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
@@ -300,6 +365,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 setMediaPlayer();
             }
         });
+        btnSound.setVisibility(View.VISIBLE);
     }
 
     private String[] getRandomFakeCountry(String correct_answer_country_code) {
@@ -325,8 +391,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 imageView.setImageBitmap(bitmap);
                 if (isMainImage) {
+//                    showSplashAssets(false);
                     updateButtons();
-                    fetchMusic();
+                    fetchMusicUrl();
                 }
 
             }
@@ -336,7 +403,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // Handle any errors
             }
         });
-
     }
 
     @Override
@@ -381,6 +447,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onPrepared(MediaPlayer mp) {
                 mediaPlayer.start();
+
             }
         });
         try {
@@ -392,29 +459,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        // flags clicks
+    @OnClick({R.id.buttonA, R.id.buttonB})
+    public void onFlagClick(View v) {
         Object tag = v.getTag();
         String country = documentCountry.getString(COUNTRY_KEY);
+        String outputMessage;
         if (tag == null) {
-            textViewMessageOutput.setText(String.format(getString(R.string.output_message_wrong_answer), country));
+            outputMessage = String.format(getString(R.string.output_message_wrong_answer), country);
         } else {
             String txtInfo = (String) documentCountry.get("img_title");
-            textViewMessageOutput.setText(String.format(getString(R.string.output_message_correct_answer), country, txtInfo));
-
+            outputMessage = String.format(getString(R.string.output_message_correct_answer), country, txtInfo)
+//                    + "Hello World! Hello World! Hello World! Hello World! Hello ld! HelloWorld! ello rld! World! Hello World! Hello World! "
+            ;
         }
-
+        textViewMessageOutput.setText(outputMessage);
 
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        signInAnonymously();
-    }
-
-    private void signInAnonymously() {
+    private void signInAndInitApp() {
 
         mAuth.signInAnonymously()
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -422,13 +484,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
-                            log("signInAnonymously:success");
+                            log("signInAndInitApp:success");
                             FirebaseUser user = mAuth.getCurrentUser();
 //                            updateUI(user);
-                            initNewCountry();
+                            initApp();
                         } else {
                             // If sign in fails, display a message to the user.
-                            log("signInAnonymously:failure " + task.getException());
+                            log("signInAndInitApp:failure " + task.getException());
 //                            Toast.makeText(AnonymousAuthActivity.this, "Authentication failed.",
 //                                    Toast.LENGTH_SHORT).show();
 //                            updateUI(null);
@@ -455,45 +517,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             adView.resume();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    @OnClick(R.id.btn_play_music)
+    public void onSoundClicked(View view) {
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.menu_next) {
-
-            cleanUI();
-            if (mInterstitialAd.isLoaded() && fabClicks++ > 4)
-                mInterstitialAd.show();
-            else {
-                initNewCountry();
-            }
-
-            return true;
-        } else if (id == R.id.menu_sound) {
-            onSoundClicked();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void onSoundClicked() {
-        if (mediaPlayer == null)
+        if (mediaPlayer == null) {
             setMediaPlayer();
-        else if (mediaPlayer.isPlaying()) {
+        } else if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
-            mediaPlayer.seekTo(0);
+//            mediaPlayer.seekTo(0);
         } else {
             try {
                 mediaPlayer.start();
