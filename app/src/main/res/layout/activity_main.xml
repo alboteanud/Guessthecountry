@@ -55,25 +55,28 @@
 
     <ImageView
         android:id="@+id/flagA"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="56dp"
         android:layout_marginTop="16dp"
         android:adjustViewBounds="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="16dp"
         android:contentDescription="1st flag"
         app:layout_constraintEnd_toStartOf="@+id/flagB"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_play_music"
         app:layout_constraintTop_toBottomOf="@+id/countryView"
         tools:src="#57ff00" />
 
     <ImageView
         android:id="@+id/flagB"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginEnd="8dp"
         android:adjustViewBounds="true"
+        android:layout_marginStart="16dp"
         android:contentDescription="2nd flag"
         app:layout_constraintBottom_toBottomOf="@+id/flagA"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/fab"
         app:layout_constraintStart_toEndOf="@+id/flagA"
         app:layout_constraintTop_toTopOf="@+id/flagA"
         tools:src="#ff2772" />
@@ -140,7 +143,7 @@
         app:layout_constraintEnd_toStartOf="@+id/fab"
         app:layout_constraintStart_toStartOf="@+id/adView"
         app:layout_constraintTop_toBottomOf="@+id/textFlagA"
-        tools:text="Hello World! Hello World! Hello World! Hello World! Hello ld! \nHello World!" />
+        tools:text="Hello World! Hello World! Hello World!  \nHello World!" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -160,16 +163,16 @@
         android:id="@+id/btn_play_music"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="0dp"
         android:background="@drawable/selector"
         android:clickable="true"
         android:contentDescription="Start/Stop music"
         android:focusable="true"
         android:padding="4dp"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/fab"
-        app:layout_constraintEnd_toEndOf="@+id/fab"
-        app:layout_constraintStart_toStartOf="@+id/fab"
+        app:layout_constraintBottom_toBottomOf="@+id/fab"
+        app:layout_constraintStart_toStartOf="parent"
         app:srcCompat="@drawable/ic_sound"
         tools:visibility="visible" />
 
