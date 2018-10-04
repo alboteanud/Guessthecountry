@@ -45,18 +45,19 @@
         android:id="@+id/countryView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:maxHeight="420dp"
         android:adjustViewBounds="true"
         android:contentDescription="@string/country_image"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:background="#43434343"
-        tools:layout_height="240dp" />
+        tools:layout_height="260dp" />
 
     <ImageView
         android:id="@+id/flagA"
         android:layout_width="0dp"
-        android:layout_height="56dp"
+        android:layout_height="64dp"
         android:layout_marginTop="16dp"
         android:adjustViewBounds="true"
         android:layout_marginStart="8dp"
@@ -71,7 +72,7 @@
         android:id="@+id/flagB"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="0dp"
         android:adjustViewBounds="true"
         android:layout_marginStart="16dp"
         android:contentDescription="2nd flag"
@@ -134,7 +135,7 @@
         android:layout_height="64dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="4dp"
         android:layout_marginBottom="8dp"
         android:autoSizeMaxTextSize="16sp"
         android:autoSizeMinTextSize="11sp"
@@ -152,7 +153,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="24dp"
-        android:alpha="0.3"
+        android:alpha="0.5"
         android:clickable="false"
         app:fabSize="normal"
         app:layout_constraintBottom_toTopOf="@+id/adView"
@@ -170,19 +171,18 @@
         android:contentDescription="info about image and sound"
         android:focusable="true"
         android:padding="4dp"
-        android:visibility="visible"
+        android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/btn_play_music"
         app:layout_constraintEnd_toEndOf="@+id/btn_play_music"
         app:layout_constraintStart_toStartOf="@+id/btn_play_music"
         app:srcCompat="@drawable/ic_info"
         tools:visibility="visible" />
 
- <ImageView
+    <ImageView
         android:id="@+id/btn_play_music"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="0dp"
+        android:layout_marginStart="16dp"
         android:background="@drawable/selector"
         android:clickable="true"
         android:contentDescription="Start/Stop music"
@@ -191,6 +191,7 @@
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/fab"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fab"
         app:srcCompat="@drawable/ic_sound"
         tools:visibility="visible" />
 

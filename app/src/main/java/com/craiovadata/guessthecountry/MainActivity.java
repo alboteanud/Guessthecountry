@@ -1,8 +1,7 @@
 package com.craiovadata.guessthecountry;
 
 import android.content.res.TypedArray;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -18,13 +17,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -55,8 +57,6 @@ import static com.craiovadata.guessthecountry.Utils.log;
 public class MainActivity extends AppCompatActivity {
     private static final String SIGHTS_AND_SOUNDS_COLLECTION = "sights_and_sounds_";
     private static final String NUMBER_OF_COUNTRIES_KEY_REMOTE_CONFIG = "number_of_countries";
-    private static final String COUNTRY_CODE_KEY = "country_code";
-    private static final String COUNTRY_KEY = "country";
     static final String TAG = "MainActivity";
     private static final int CODE = 0;
     private static final int NAME = 1;
@@ -97,15 +97,11 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.fab)
     FloatingActionButton floatingActionButton;
 
-//    @BindView(R.id.imageViewSplash)
-//    ImageView imageViewSplash;
-//
-//    @BindView(R.id.textViewWellcome)
-//    TextView textViewWellcome;
+    @BindView(R.id.btn_info)
+    View btnInfo;
 
     private MediaPlayer mediaPlayer;
     private Uri soundUri;
-//    private DocumentSnapshot documentCountry;
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
     private TypedArray countries;
     private Random random;
@@ -117,21 +113,23 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseStorage storage;
     private ListenerRegistration docListenerRegistration;
     private int nr_docs_countries_firebase;
-    private static final int DELAY_FAB_ACTIVATION = 5 * 1000;
+    private static final int DELAY_FAB_ACTIVATION = 4 * 1000;
     private Handler handler;
     private Runnable runnableActivateFab;
-    Item item;
+    private Item item;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+        initObjects();
+        initAds();
 //        Toolbar toolbar = findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
-        ButterKnife.bind(this);
 
-        initFirebase();
-        initAds();
+        signInAnonymously();
+
     }
 
     @OnClick({R.id.fab})
@@ -146,21 +144,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void initFirebase() {
-        mAuth = FirebaseAuth.getInstance();
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-
-        firestore = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build();
-        firestore.setFirestoreSettings(settings);
-
-        storage = FirebaseStorage.getInstance();
-
-
-        signInAndInitApp();
-    }
 
     private void initAds() {
         MobileAds.initialize(this, "ca-app-pub-3931793949981809~9763575423");
@@ -186,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void initApp() {
+    private void initObjects() {
         random = new Random();
         handler = new Handler();
         runnableActivateFab = new Runnable() {
@@ -196,6 +179,18 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         countries = getResources().obtainTypedArray(R.array.countrycodes);
+
+        mAuth = FirebaseAuth.getInstance();
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        firestore = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        firestore.setFirestoreSettings(settings);
+        storage = FirebaseStorage.getInstance();
+    }
+
+    private void onSignInCompleted() {
 //        fetchParamNumCountries
         FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
                 .setDeveloperModeEnabled(BuildConfig.DEBUG)
@@ -217,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
+
     }
 
     private void showProgressBar(Boolean shouldShow) {
@@ -224,12 +220,14 @@ public class MainActivity extends AppCompatActivity {
         else progressBar.setVisibility(View.INVISIBLE);
     }
 
-
     private void cleanUI() {
         btnSound.setVisibility(View.INVISIBLE);
-        imageViewMain.setImageDrawable(null);
-        flagA.setImageDrawable(null);
-        flagB.setImageDrawable(null);
+        btnInfo.setVisibility(View.INVISIBLE);
+
+        GlideApp.with(this).clear(imageViewMain);
+        GlideApp.with(this).clear(flagA);
+        GlideApp.with(this).clear(flagB);
+
         textViewMessageOutput.setText(null);
         textViewFlagA.setText(null);
         textViewFlagB.setText(null);
@@ -240,13 +238,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void activateFab(Boolean shouldActivate) {
-        float alphaVal = shouldActivate ? 1.0f : 0.3f;
+        float alphaVal = shouldActivate ? 1.0f : 0.5f;
         floatingActionButton.setAlpha(alphaVal);
         floatingActionButton.setClickable(shouldActivate);
         floatingActionButton.setEnabled(shouldActivate);
 
     }
-
 
     private void lateActivateFab() {
         handler.removeCallbacks(runnableActivateFab);
@@ -279,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
 
                     Item item = documentSnapshot.toObject(Item.class);
                     item.setId(documentSnapshot.getId());
-//                    docListenerRegistration.remove();
+                    docListenerRegistration.remove();
                     onItemLoaded(item);
 
 
@@ -306,32 +303,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateButtons() {
-        String locFlag_true = "flags_jpg/" + item.getCountry_code() + ".jpg";
-
         final String[] wrongCountry = getRandomFakeCountry();
-        String locFlag_false = "flags_jpg/" + wrongCountry[CODE] + ".jpg";
-//       locFlag_false = "flags_jpg/NO.jpg";
-
         final boolean coin = random.nextBoolean();
         if (coin) {
-            btnA.setTag(true);
+            btnA.setTag(coin);
             btnB.setTag(null);
 
-            textViewFlagA.setText(item.getCountry());
-            textViewFlagB.setText(wrongCountry[NAME]);
+            fetchFlag(flagA, textViewFlagA, item.getCountry_code(), item.getCountry());
+            fetchFlag(flagB, textViewFlagB, wrongCountry[CODE], wrongCountry[NAME]);
 
-            fetchImage(locFlag_true, flagA);
-            fetchImage(locFlag_false, flagB);
         } else {
             btnA.setTag(null);
             btnB.setTag(true);
 
-            textViewFlagA.setText(wrongCountry[NAME]);
-            textViewFlagB.setText(item.getCountry());
-
-            fetchImage(locFlag_false, flagA);
-            fetchImage(locFlag_true, flagB);
+            fetchFlag(flagA, textViewFlagA, wrongCountry[CODE], wrongCountry[NAME]);
+            fetchFlag(flagB, textViewFlagB, item.getCountry_code(), item.getCountry());
         }
+    }
+
+    private void fetchFlag(ImageView imageView, final TextView textView, String code, final String countryName) {
+        String flagLocation = "flags_jpg/" + code + ".jpg";
+        StorageReference flagRef = storage.getReference(flagLocation);
+
+        GlideApp.with(this)
+                .load(flagRef)
+                .addListener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        textView.setText(countryName);
+                        return false;
+                    }
+                })
+                .into(imageView);
+
     }
 
     private void fetchMusicUrl() {
@@ -359,29 +368,30 @@ public class MainActivity extends AppCompatActivity {
         return fakeCountry;
     }
 
-    private void fetchImage(String location, final ImageView imageView) {
-        StorageReference imgRef = storage.getReference(location);
+    private void fetchImage() {
+        StorageReference imgRef = item.getImgRef(storage);
+        StorageReference thumbRef = item.getThumbRef(storage);
 
-        final long ONE_MEGABYTE = 1024 * 1024;
-        imgRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-            @Override
-            public void onSuccess(byte[] bytes) {
-                // Data for "images/island.jpg" is returns, use this as needed
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                imageView.setImageBitmap(bitmap);
-                if (imageView.getId()==R.id.countryView) {
-//                    showSplashAssets(false);
-                    updateButtons();
+        GlideApp.with(this)
+                .load(imgRef)
+                .addListener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        return false;
+                    }
 
-                }
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        updateButtons();
+                        return false;
+                    }
+                })
+                .thumbnail(GlideApp.with(this).load(thumbRef))
+//                .transition(DrawableTransitionOptions.withCrossFade())
+//                .placeholder(R.drawable.ic_launcher_countries)
+                .into(imageViewMain);
 
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle any errors
-            }
-        });
+
     }
 
     @Override
@@ -445,14 +455,14 @@ public class MainActivity extends AppCompatActivity {
         if (tag == null) {
             outputMessage = String.format(getString(R.string.output_message_wrong_answer), item.getCountry());
         } else {
-            outputMessage = String.format(getString(R.string.output_message_correct_answer), item.getCountry(), item.getImg_title())
-            ;
+            outputMessage = String.format(getString(R.string.output_message_correct_answer), item.getCountry(), item.getImg_title());
+            btnInfo.setVisibility(View.VISIBLE);
         }
         textViewMessageOutput.setText(outputMessage);
 
     }
 
-    private void signInAndInitApp() {
+    private void signInAnonymously() {
 
         mAuth.signInAnonymously()
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -460,13 +470,13 @@ public class MainActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
-                            log("signInAndInitApp:success");
+                            log("signInAnonymously:success");
                             FirebaseUser user = mAuth.getCurrentUser();
 //                            updateUI(user);
-                            initApp();
+                            onSignInCompleted();
                         } else {
                             // If sign in fails, display a message to the user.
-                            log("signInAndInitApp:failure " + task.getException());
+                            log("signInAnonymously:failure " + task.getException());
 
                         }
 
@@ -474,6 +484,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
+
 
     @Override
     protected void onPause() {
@@ -511,10 +522,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void onItemLoaded(Item item) {
         this.item = item;
+        fetchImage();
         fetchMusicUrl();
-        fetchImage(item.getImageLocation(), imageViewMain);
-
-
     }
 
     @OnClick(R.id.btn_info)

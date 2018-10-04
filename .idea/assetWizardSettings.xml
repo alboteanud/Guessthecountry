@@ -73,7 +73,7 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="scalingPercent" value="67" />
+                                                <entry key="scalingPercent" value="50" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -84,8 +84,8 @@
                                   <option name="values">
                                     <map>
                                       <entry key="backgroundAssetType" value="COLOR" />
-                                      <entry key="backgroundColor" value="ffffff" />
-                                      <entry key="foregroundImage" value="C:\Users\albot\Desktop\collage.png" />
+                                      <entry key="backgroundColor" value="fdfdfe" />
+                                      <entry key="foregroundImage" value="C:\Users\albot\Desktop\download.png" />
                                     </map>
                                   </option>
                                 </PersistentState>

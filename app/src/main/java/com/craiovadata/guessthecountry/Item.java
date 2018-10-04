@@ -2,6 +2,8 @@ package com.craiovadata.guessthecountry;
 
 
 import com.google.firebase.firestore.IgnoreExtraProperties;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 @IgnoreExtraProperties
 public class Item {
@@ -72,7 +74,13 @@ public class Item {
         this.id = id;
     }
 
-    public String getImageLocation() {
-        return  "images/" + id + ".jpg";
+    public StorageReference getImgRef(FirebaseStorage storage) {
+        String location = "images/" + id + ".jpg";
+        return storage.getReference(location);
+    }
+
+    public StorageReference getThumbRef(FirebaseStorage storage) {
+        String location = "image_thumbs/" + id + "_tn.jpg";
+        return storage.getReference(location);
     }
 }
