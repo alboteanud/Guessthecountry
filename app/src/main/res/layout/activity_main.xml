@@ -132,6 +132,7 @@
         android:id="@+id/textViewMessageOutput"
         android:layout_width="0dp"
         android:layout_height="64dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
@@ -141,7 +142,7 @@
         android:gravity="center_horizontal"
         app:layout_constraintBottom_toTopOf="@+id/adView"
         app:layout_constraintEnd_toStartOf="@+id/fab"
-        app:layout_constraintStart_toStartOf="@+id/adView"
+        app:layout_constraintStart_toEndOf="@+id/btn_play_music"
         app:layout_constraintTop_toBottomOf="@+id/textFlagA"
         tools:text="Hello World! Hello World! Hello World!  \nHello World!" />
 
@@ -151,15 +152,32 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="24dp"
-        android:alpha="0.0"
+        android:alpha="0.3"
         android:clickable="false"
-        app:fabSize="mini"
+        app:fabSize="normal"
         app:layout_constraintBottom_toTopOf="@+id/adView"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_next"
         tools:alpha="1.0" />
 
     <ImageView
+        android:id="@+id/btn_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/selector"
+        android:clickable="true"
+        android:contentDescription="info about image and sound"
+        android:focusable="true"
+        android:padding="4dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/btn_play_music"
+        app:layout_constraintEnd_toEndOf="@+id/btn_play_music"
+        app:layout_constraintStart_toStartOf="@+id/btn_play_music"
+        app:srcCompat="@drawable/ic_info"
+        tools:visibility="visible" />
+
+ <ImageView
         android:id="@+id/btn_play_music"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -170,7 +188,7 @@
         android:contentDescription="Start/Stop music"
         android:focusable="true"
         android:padding="4dp"
-        android:visibility="gone"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/fab"
         app:layout_constraintStart_toStartOf="parent"
         app:srcCompat="@drawable/ic_sound"

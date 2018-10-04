@@ -3,4 +3,5 @@
     <string name="output_message_correct_answer">%1$s is correct! \n%2$s</string>
     <string name="output_message_wrong_answer">Nope! The correct answer is %1$s</string>
     <string name="country_image">An image from this country</string>
+    <string name="cancel">Cancel</string>
 </resources>

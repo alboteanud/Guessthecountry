@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MediaPlayer mediaPlayer;
     private Uri soundUri;
-    private DocumentSnapshot documentCountry;
+//    private DocumentSnapshot documentCountry;
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
     private TypedArray countries;
     private Random random;
@@ -120,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int DELAY_FAB_ACTIVATION = 5 * 1000;
     private Handler handler;
     private Runnable runnableActivateFab;
+    Item item;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -216,12 +217,6 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
-//        .addOnFailureListener(new OnFailureListener() {
-//            @Override
-//            public void onFailure(@NonNull Exception e) {
-//                showErrorToast(e);
-//            }
-//        });
     }
 
     private void showProgressBar(Boolean shouldShow) {
@@ -244,19 +239,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-//    private void showSplashAssets(Boolean shouldShow) {
-//        if (shouldShow) {
-//            imageViewSplash.setVisibility(View.VISIBLE);
-//            textViewWellcome.setVisibility(View.VISIBLE);
-//        } else {
-//            imageViewSplash.setVisibility(View.INVISIBLE);
-//            textViewWellcome.setVisibility(View.INVISIBLE);
-//        }
-//
-//    }
-
     private void activateFab(Boolean shouldActivate) {
-        float alphaVal = shouldActivate ? 1f : 0f;
+        float alphaVal = shouldActivate ? 1.0f : 0.3f;
         floatingActionButton.setAlpha(alphaVal);
         floatingActionButton.setClickable(shouldActivate);
         floatingActionButton.setEnabled(shouldActivate);
@@ -278,8 +262,8 @@ public class MainActivity extends AppCompatActivity {
         final String r_s = Integer.toString(r);
         final DocumentReference documentReference = firestore.collection(SIGHTS_AND_SOUNDS_COLLECTION).document(r_s);
 
-        if (docListenerRegistration != null)
-            docListenerRegistration.remove();
+//        if (docListenerRegistration != null)
+//            docListenerRegistration.remove();
         docListenerRegistration = documentReference.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
@@ -293,13 +277,10 @@ public class MainActivity extends AppCompatActivity {
                 if (documentSnapshot != null && documentSnapshot.exists()) {
                     log("Current data: " + documentSnapshot.getData());
 
-                    documentCountry = documentSnapshot;
-                    docListenerRegistration.remove();
-
-                    final String imgLocation = "images/" + documentCountry.getId() + ".jpg";
-                    fetchImage(imgLocation, imageViewMain, true);
-
-                    log("code " + documentCountry.getString(COUNTRY_CODE_KEY) + " " + documentCountry.getString(COUNTRY_KEY) + " " + documentCountry.getId() + " img_loc: " + imgLocation);
+                    Item item = documentSnapshot.toObject(Item.class);
+                    item.setId(documentSnapshot.getId());
+//                    docListenerRegistration.remove();
+                    onItemLoaded(item);
 
 
                 } else {
@@ -325,11 +306,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateButtons() {
-        String countryCode = documentCountry.getString(COUNTRY_CODE_KEY);
-        String countryName = documentCountry.getString(COUNTRY_KEY);
-        String locFlag_true = "flags_jpg/" + countryCode + ".jpg";
+        String locFlag_true = "flags_jpg/" + item.getCountry_code() + ".jpg";
 
-        final String[] wrongCountry = getRandomFakeCountry(countryCode);
+        final String[] wrongCountry = getRandomFakeCountry();
         String locFlag_false = "flags_jpg/" + wrongCountry[CODE] + ".jpg";
 //       locFlag_false = "flags_jpg/NO.jpg";
 
@@ -338,26 +317,26 @@ public class MainActivity extends AppCompatActivity {
             btnA.setTag(true);
             btnB.setTag(null);
 
-            textViewFlagA.setText(countryName);
+            textViewFlagA.setText(item.getCountry());
             textViewFlagB.setText(wrongCountry[NAME]);
 
-            fetchImage(locFlag_true, flagA, false);
-            fetchImage(locFlag_false, flagB, false);
+            fetchImage(locFlag_true, flagA);
+            fetchImage(locFlag_false, flagB);
         } else {
             btnA.setTag(null);
             btnB.setTag(true);
 
             textViewFlagA.setText(wrongCountry[NAME]);
-            textViewFlagB.setText(countryName);
+            textViewFlagB.setText(item.getCountry());
 
-            fetchImage(locFlag_false, flagA, false);
-            fetchImage(locFlag_true, flagB, false);
+            fetchImage(locFlag_false, flagA);
+            fetchImage(locFlag_true, flagB);
         }
     }
 
     private void fetchMusicUrl() {
         StorageReference ref = storage.getReference(
-                "sounds/" + documentCountry.getId() + "_x264.mp4");
+                "sounds/" + item.getId() + "_x264.mp4");
         ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
@@ -368,9 +347,9 @@ public class MainActivity extends AppCompatActivity {
         btnSound.setVisibility(View.VISIBLE);
     }
 
-    private String[] getRandomFakeCountry(String correct_answer_country_code) {
+    private String[] getRandomFakeCountry() {
         String[] fakeCountry = null;
-        while (fakeCountry == null || fakeCountry[CODE].equals(correct_answer_country_code)) {
+        while (fakeCountry == null || fakeCountry[CODE].equals(item.getCountry_code())) {
             int r = random.nextInt(countries.length());
 
             int id = countries.getResourceId(r, 0);
@@ -380,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
         return fakeCountry;
     }
 
-    private void fetchImage(String location, final ImageView imageView, final boolean isMainImage) {
+    private void fetchImage(String location, final ImageView imageView) {
         StorageReference imgRef = storage.getReference(location);
 
         final long ONE_MEGABYTE = 1024 * 1024;
@@ -390,10 +369,10 @@ public class MainActivity extends AppCompatActivity {
                 // Data for "images/island.jpg" is returns, use this as needed
                 Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 imageView.setImageBitmap(bitmap);
-                if (isMainImage) {
+                if (imageView.getId()==R.id.countryView) {
 //                    showSplashAssets(false);
                     updateButtons();
-                    fetchMusicUrl();
+
                 }
 
             }
@@ -462,14 +441,11 @@ public class MainActivity extends AppCompatActivity {
     @OnClick({R.id.buttonA, R.id.buttonB})
     public void onFlagClick(View v) {
         Object tag = v.getTag();
-        String country = documentCountry.getString(COUNTRY_KEY);
         String outputMessage;
         if (tag == null) {
-            outputMessage = String.format(getString(R.string.output_message_wrong_answer), country);
+            outputMessage = String.format(getString(R.string.output_message_wrong_answer), item.getCountry());
         } else {
-            String txtInfo = (String) documentCountry.get("img_title");
-            outputMessage = String.format(getString(R.string.output_message_correct_answer), country, txtInfo)
-//                    + "Hello World! Hello World! Hello World! Hello World! Hello ld! HelloWorld! ello rld! World! Hello World! Hello World! "
+            outputMessage = String.format(getString(R.string.output_message_correct_answer), item.getCountry(), item.getImg_title())
             ;
         }
         textViewMessageOutput.setText(outputMessage);
@@ -491,9 +467,7 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             // If sign in fails, display a message to the user.
                             log("signInAndInitApp:failure " + task.getException());
-//                            Toast.makeText(AnonymousAuthActivity.this, "Authentication failed.",
-//                                    Toast.LENGTH_SHORT).show();
-//                            updateUI(null);
+
                         }
 
                         // ...
@@ -532,6 +506,23 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
                 releaseMediaPlayer();
             }
+        }
+    }
+
+    private void onItemLoaded(Item item) {
+        this.item = item;
+        fetchMusicUrl();
+        fetchImage(item.getImageLocation(), imageViewMain);
+
+
+    }
+
+    @OnClick(R.id.btn_info)
+    public void onInfoClicked(View view) {
+        if (item != null) {
+            InfoDialogFragment infoDialogFragment = new InfoDialogFragment();
+            infoDialogFragment.setItem(item);
+            infoDialogFragment.show(getSupportFragmentManager(), InfoDialogFragment.TAG);
         }
     }
 
