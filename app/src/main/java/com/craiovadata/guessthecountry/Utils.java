@@ -10,11 +10,11 @@ class Utils {
 
     static void log(String s) {
         if (BuildConfig.DEBUG)
-            Log.d(TAG, s);
+            Log.w(TAG, s);
     }
 
-    static String getAdUnitId() {
-        int r = new Random().nextInt(10);
+    static String getAdUnitId_interstitial(Random random) {
+        int r = random.nextInt(10);
         if (r == 0)
             return "ca-app-pub-3052455927658337/3812605089";
         else if (r < 3)

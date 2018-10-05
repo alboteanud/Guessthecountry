@@ -11,7 +11,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -55,51 +59,39 @@ import static com.craiovadata.guessthecountry.Utils.log;
 
 
 public class MainActivity extends AppCompatActivity {
+    static final String TAG = "MainActivity";
     private static final String SIGHTS_AND_SOUNDS_COLLECTION = "sights_and_sounds_";
     private static final String NUMBER_OF_COUNTRIES_KEY_REMOTE_CONFIG = "number_of_countries";
-    static final String TAG = "MainActivity";
     private static final int CODE = 0;
     private static final int NAME = 1;
-
+    private static final int DELAY_FAB_ACTIVATION = 4 * 1000;
     @BindView(R.id.textFlagA)
     TextView textViewFlagA;
-
     @BindView(R.id.textFlagB)
     TextView textViewFlagB;
-
     @BindView(R.id.textViewMessageOutput)
     TextView textViewMessageOutput;
-
-    @BindView(R.id.countryView)
+    @BindView(R.id.mainImageView)
     ImageView imageViewMain;
-
     @BindView(R.id.flagA)
     ImageView flagA;
-
     @BindView(R.id.flagB)
     ImageView flagB;
-
     @BindView(R.id.adView)
     AdView adView;
-
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
-
     @BindView(R.id.btn_play_music)
     View btnSound;
-
     @BindView(R.id.buttonA)
     View btnA;
-
     @BindView(R.id.buttonB)
     View btnB;
-
     @BindView(R.id.fab)
-    FloatingActionButton floatingActionButton;
-
+    FloatingActionButton fab;
     @BindView(R.id.btn_info)
     View btnInfo;
-
+    String id_test_string = "";
     private MediaPlayer mediaPlayer;
     private Uri soundUri;
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
@@ -107,16 +99,15 @@ public class MainActivity extends AppCompatActivity {
     private Random random;
     private InterstitialAd mInterstitialAd;
     private int fabClicks;
-
     private FirebaseAuth mAuth;
     private FirebaseFirestore firestore;
     private FirebaseStorage storage;
     private ListenerRegistration docListenerRegistration;
-    private int nr_docs_countries_firebase;
-    private static final int DELAY_FAB_ACTIVATION = 4 * 1000;
+    private int param_nr_docs = 319;
     private Handler handler;
     private Runnable runnableActivateFab;
     private Item item;
+    private int test_id = 102;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,35 +118,54 @@ public class MainActivity extends AppCompatActivity {
         initAds();
 //        Toolbar toolbar = findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
-
+        cleanUI();
         signInAnonymously();
 
+        if (BuildConfig.DEBUG) {
+            addTestBtn();
+        }
+    }
+
+    private void addTestBtn() {
+        Button crashButton = new Button(this);
+        crashButton.setText("<");
+        crashButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                test_id -= 2;
+                cleanUI();
+                fetchRandomDocument();
+            }
+        });
+
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.START;
+        addContentView(crashButton, layoutParams);
     }
 
     @OnClick({R.id.fab})
     public void onFabNextClicked(View view) {
-
-        if (mInterstitialAd.isLoaded() && fabClicks++ > 3)
-            mInterstitialAd.show();
-        else {
+        if (mInterstitialAd != null && mInterstitialAd.isLoaded() && fabClicks++ > 3) {
+            mInterstitialAd.show(); // interstitial will not load in debug mode
+        } else {
             cleanUI();
-//            showSplashAssets(true);
             fetchRandomDocument();
         }
     }
 
-
     private void initAds() {
         MobileAds.initialize(this, "ca-app-pub-3931793949981809~9763575423");
 
+        // init banner
         AdRequest requestBanner = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
         adView.loadAd(requestBanner);
 
+        // init interstitial
         mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId(Utils.getAdUnitId());
+        mInterstitialAd.setAdUnitId(Utils.getAdUnitId_interstitial(random));
         AdRequest requestInterstitial = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
-        if (!BuildConfig.DEBUG)
-            mInterstitialAd.loadAd(requestInterstitial);
+        if (!BuildConfig.DEBUG) mInterstitialAd.loadAd(requestInterstitial);
 
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
@@ -175,7 +185,8 @@ public class MainActivity extends AppCompatActivity {
         runnableActivateFab = new Runnable() {
             @Override
             public void run() {
-                activateFab(true);
+//                activateFab(true);
+                fab.show();
             }
         };
         countries = getResources().obtainTypedArray(R.array.countrycodes);
@@ -205,19 +216,17 @@ public class MainActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             mFirebaseRemoteConfig.activateFetched();
                         } else {
-                            showErrorToast(task.getException());
+                            Exception exception = task.getException();
+                            log("get failed with " + exception);
+                            if (exception != null)
+                                Toast.makeText(MainActivity.this, exception.getMessage(), Toast.LENGTH_SHORT).show();
                         }
-                        nr_docs_countries_firebase = (int) mFirebaseRemoteConfig.getLong(NUMBER_OF_COUNTRIES_KEY_REMOTE_CONFIG);
+                        param_nr_docs = (int) mFirebaseRemoteConfig.getLong(NUMBER_OF_COUNTRIES_KEY_REMOTE_CONFIG);
                         fetchRandomDocument();
 
                     }
                 });
 
-    }
-
-    private void showProgressBar(Boolean shouldShow) {
-        if (shouldShow) progressBar.setVisibility(View.VISIBLE);
-        else progressBar.setVisibility(View.INVISIBLE);
     }
 
     private void cleanUI() {
@@ -233,53 +242,45 @@ public class MainActivity extends AppCompatActivity {
         textViewFlagB.setText(null);
         if (mediaPlayer != null)
             mediaPlayer.reset();
-        activateFab(false);
-
-    }
-
-    private void activateFab(Boolean shouldActivate) {
-        float alphaVal = shouldActivate ? 1.0f : 0.5f;
-        floatingActionButton.setAlpha(alphaVal);
-        floatingActionButton.setClickable(shouldActivate);
-        floatingActionButton.setEnabled(shouldActivate);
+        fab.hide();
 
     }
 
     private void lateActivateFab() {
         handler.removeCallbacks(runnableActivateFab);
         handler.postDelayed(runnableActivateFab, DELAY_FAB_ACTIVATION);
+
     }
 
     private void fetchRandomDocument() {
+        if (random == null) return;  // probabil click de test
+        progressBar.setVisibility(View.VISIBLE);
 
-        showProgressBar(true);
-
-        int r = random.nextInt(nr_docs_countries_firebase) + 2;
-//        r=158;
+        int r = random.nextInt(param_nr_docs) + 2;
+        if (BuildConfig.DEBUG) {
+            test_id++;
+            r = test_id;
+        }
         final String r_s = Integer.toString(r);
         final DocumentReference documentReference = firestore.collection(SIGHTS_AND_SOUNDS_COLLECTION).document(r_s);
-
-//        if (docListenerRegistration != null)
-//            docListenerRegistration.remove();
         docListenerRegistration = documentReference.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                showProgressBar(false);
                 lateActivateFab();
                 if (e != null) {
                     log("Listen failed. " + e);
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 if (documentSnapshot != null && documentSnapshot.exists()) {
-                    log("Current data: " + documentSnapshot.getData());
+                    log("Current id: " + documentSnapshot.getId() + " data:" + documentSnapshot.getData());
 
                     Item item = documentSnapshot.toObject(Item.class);
-                    item.setId(documentSnapshot.getId());
+                    if (item != null) {
+                        item.setId(documentSnapshot.getId());
+                    }
                     docListenerRegistration.remove();
                     onItemLoaded(item);
-
-
                 } else {
                     log("Current data: null");
                 }
@@ -289,36 +290,40 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void showErrorToast(Exception exception) {
-        log("get failed with " + exception);
-
-        FirebaseFirestoreException firestoreException = (FirebaseFirestoreException) exception;
-        if (firestoreException != null) {
-            FirebaseFirestoreException.Code errorCode = firestoreException.getCode();
-            String errorMessage = firestoreException.getMessage();
-            // test the errorCode and errorMessage, and handle accordingly
-
-            Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void updateButtons() {
+        if (BuildConfig.DEBUG) id_test_string = "\n" + test_id;
+
         final String[] wrongCountry = getRandomFakeCountry();
         final boolean coin = random.nextBoolean();
         if (coin) {
-            btnA.setTag(coin);
+            btnA.setTag(true);
             btnB.setTag(null);
 
-            fetchFlag(flagA, textViewFlagA, item.getCountry_code(), item.getCountry());
+            fetchFlag(flagA, textViewFlagA, item.getCountry_code(), item.getCountry() + id_test_string);
             fetchFlag(flagB, textViewFlagB, wrongCountry[CODE], wrongCountry[NAME]);
+            if (BuildConfig.DEBUG) {
+                performLateClick(flagA);
+            }
 
         } else {
             btnA.setTag(null);
             btnB.setTag(true);
 
             fetchFlag(flagA, textViewFlagA, wrongCountry[CODE], wrongCountry[NAME]);
-            fetchFlag(flagB, textViewFlagB, item.getCountry_code(), item.getCountry());
+            fetchFlag(flagB, textViewFlagB, item.getCountry_code(), item.getCountry() + id_test_string);
+            if (BuildConfig.DEBUG) {
+                performLateClick(flagB);
+            }
         }
+    }
+
+    private void performLateClick(final ImageView flagA) {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                onFlagClick(flagA);
+            }
+        }, 5000);
     }
 
     private void fetchFlag(ImageView imageView, final TextView textView, String code, final String countryName) {
@@ -353,7 +358,6 @@ public class MainActivity extends AppCompatActivity {
                 setMediaPlayer();
             }
         });
-        btnSound.setVisibility(View.VISIBLE);
     }
 
     private String[] getRandomFakeCountry() {
@@ -382,6 +386,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        progressBar.setVisibility(View.INVISIBLE);
                         updateButtons();
                         return false;
                     }
@@ -436,6 +441,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 mediaPlayer.start();
+                btnSound.setVisibility(View.VISIBLE);
 
             }
         });
@@ -458,6 +464,8 @@ public class MainActivity extends AppCompatActivity {
             outputMessage = String.format(getString(R.string.output_message_correct_answer), item.getCountry(), item.getImg_title());
             btnInfo.setVisibility(View.VISIBLE);
         }
+//        textViewMessageOutput.setText(null);
+//        textViewMessageOutput.setTextAppearance(R.style.AppTheme_Body1);
         textViewMessageOutput.setText(outputMessage);
 
     }
@@ -484,7 +492,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
 
     @Override
     protected void onPause() {

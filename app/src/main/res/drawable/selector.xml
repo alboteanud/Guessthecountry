@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/abc_list_selector_holo_light" android:state_pressed="true" /> <!-- pressed -->
-    <item android:drawable="@drawable/abc_list_selector_holo_light" android:state_focused="true" /> <!-- focused -->
-    <item android:drawable="@android:color/transparent" /> <!-- default -->
+    <item  android:drawable="@drawable/glass_semi" android:state_focused="true"/>
+    <item android:drawable="@drawable/glass_semi" android:state_pressed="true" />
+    <item android:drawable="@android:color/transparent" />
+
 </selector>
