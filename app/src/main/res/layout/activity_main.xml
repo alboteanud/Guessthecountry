@@ -8,42 +8,30 @@
     tools:context=".MainActivity">
 
 
+    <ImageView
+        android:id="@+id/imageViewSplash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:contentDescription="countries traditions"
+        android:src="@drawable/ic_collage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
     <TextView
         android:id="@+id/textViewWellcome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="42dp"
         android:fontFamily="sans-serif-smallcaps"
         android:text="@string/app_name"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginEnd="8dp"
-        android:src="@drawable/icon"
-        app:layout_constraintBottom_toBottomOf="@+id/textViewWellcome"
-        app:layout_constraintEnd_toStartOf="@+id/textViewWellcome"
-        app:layout_constraintTop_toTopOf="@+id/textViewWellcome" />
-
-    <ImageView
-        android:id="@+id/imageViewSplash"
-        android:layout_width="180dp"
-        android:layout_height="180dp"
-        android:layout_marginTop="8dp"
-        android:contentDescription="countries traditions"
-        android:src="@drawable/ic_launcher_countries"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewWellcome"
-
+        app:layout_constraintTop_toBottomOf="@+id/imageViewSplash"
         />
-
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -51,10 +39,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toTopOf="@id/adView"
-        app:layout_constraintEnd_toEndOf="@+id/imageViewSplash"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/imageViewSplash"
-        app:layout_constraintTop_toBottomOf="@+id/imageViewSplash" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewWellcome" />
 
     <ImageView
         android:id="@+id/mainImageView"

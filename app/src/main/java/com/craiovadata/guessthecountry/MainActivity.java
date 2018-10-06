@@ -91,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton fab;
     @BindView(R.id.btn_info)
     View btnInfo;
+    @BindView(R.id.textViewWellcome)
+    TextView textViewWellcome;
     String id_test_string = "";
     private MediaPlayer mediaPlayer;
     private Uri soundUri;
@@ -107,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler;
     private Runnable runnableActivateFab;
     private Item item;
-    private int test_id = 102;
+    private int test_id = 155;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,14 +117,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         initObjects();
-        initAds();
 //        Toolbar toolbar = findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
         cleanUI();
         signInAnonymously();
 
-        if (BuildConfig.DEBUG) {
-            addTestBtn();
+        if (BuildConfig.DEBUG) { addTestBtn();
         }
     }
 
@@ -155,16 +155,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initAds() {
-        MobileAds.initialize(this, "ca-app-pub-3931793949981809~9763575423");
+        if (mInterstitialAd != null) return;
 
-        // init banner
-        AdRequest requestBanner = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
-        adView.loadAd(requestBanner);
+        MobileAds.initialize(MainActivity.this, "ca-app-pub-3931793949981809~9763575423");
 
         // init interstitial
-        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd = new InterstitialAd(MainActivity.this);
         mInterstitialAd.setAdUnitId(Utils.getAdUnitId_interstitial(random));
-        AdRequest requestInterstitial = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
+        AdRequest requestInterstitial = new AdRequest.Builder()
+                .tagForChildDirectedTreatment(true)
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
         if (!BuildConfig.DEBUG) mInterstitialAd.loadAd(requestInterstitial);
 
         mInterstitialAd.setAdListener(new AdListener() {
@@ -177,6 +177,13 @@ public class MainActivity extends AppCompatActivity {
                 fabClicks = 0;
             }
         });
+
+        // init banner
+        AdRequest requestBanner = new AdRequest.Builder()
+                .tagForChildDirectedTreatment(true)
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
+        adView.loadAd(requestBanner);
+
     }
 
     private void initObjects() {
@@ -243,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
         if (mediaPlayer != null)
             mediaPlayer.reset();
         fab.hide();
+        textViewWellcome.setVisibility(View.VISIBLE);
 
     }
 
@@ -270,6 +278,7 @@ public class MainActivity extends AppCompatActivity {
                 if (e != null) {
                     log("Listen failed. " + e);
                     Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.INVISIBLE);
                     return;
                 }
                 if (documentSnapshot != null && documentSnapshot.exists()) {
@@ -278,11 +287,13 @@ public class MainActivity extends AppCompatActivity {
                     Item item = documentSnapshot.toObject(Item.class);
                     if (item != null) {
                         item.setId(documentSnapshot.getId());
+                        docListenerRegistration.remove();
+                        onItemLoaded(item);
                     }
-                    docListenerRegistration.remove();
-                    onItemLoaded(item);
+
                 } else {
                     log("Current data: null");
+                    progressBar.setVisibility(View.INVISIBLE);
                 }
 
             }
@@ -291,7 +302,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateButtons() {
-        if (BuildConfig.DEBUG) id_test_string = "\n" + test_id;
+        if (BuildConfig.DEBUG) id_test_string = " " + Integer.toString(test_id);
 
         final String[] wrongCountry = getRandomFakeCountry();
         final boolean coin = random.nextBoolean();
@@ -323,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 onFlagClick(flagA);
             }
-        }, 5000);
+        }, 2000);
     }
 
     private void fetchFlag(ImageView imageView, final TextView textView, String code, final String countryName) {
@@ -381,19 +392,22 @@ public class MainActivity extends AppCompatActivity {
                 .addListener(new RequestListener<Drawable>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        progressBar.setVisibility(View.INVISIBLE);
                         return false;
                     }
 
                     @Override
                     public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
                         progressBar.setVisibility(View.INVISIBLE);
+                        textViewWellcome.setVisibility(View.INVISIBLE);
                         updateButtons();
+                        fetchMusicUrl();
                         return false;
                     }
                 })
                 .thumbnail(GlideApp.with(this).load(thumbRef))
 //                .transition(DrawableTransitionOptions.withCrossFade())
-//                .placeholder(R.drawable.ic_launcher_countries)
+//                .placeholder(R.drawable.ic_wellcome_collage)
                 .into(imageViewMain);
 
 
@@ -442,6 +456,8 @@ public class MainActivity extends AppCompatActivity {
             public void onPrepared(MediaPlayer mp) {
                 mediaPlayer.start();
                 btnSound.setVisibility(View.VISIBLE);
+
+                initAds();
 
             }
         });
@@ -530,7 +546,7 @@ public class MainActivity extends AppCompatActivity {
     private void onItemLoaded(Item item) {
         this.item = item;
         fetchImage();
-        fetchMusicUrl();
+
     }
 
     @OnClick(R.id.btn_info)

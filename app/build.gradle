@@ -8,8 +8,8 @@ android {
         applicationId "com.craiovadata.guessthecountry"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 9
-        versionName "1.0"
+        versionCode 11
+        versionName '1.1'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
