@@ -122,7 +122,8 @@ public class MainActivity extends AppCompatActivity {
         cleanUI();
         signInAnonymously();
 
-        if (BuildConfig.DEBUG) { addTestBtn();
+        if (BuildConfig.DEBUG) {
+            addTestBtn();
         }
     }
 
@@ -146,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick({R.id.fab})
     public void onFabNextClicked(View view) {
-        if (mInterstitialAd != null && mInterstitialAd.isLoaded() && fabClicks++ > 3) {
+        if (mInterstitialAd != null && mInterstitialAd.isLoaded() && fabClicks++ > 4 + random.nextInt(4)) {
             mInterstitialAd.show(); // interstitial will not load in debug mode
         } else {
             cleanUI();
