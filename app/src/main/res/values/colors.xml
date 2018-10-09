@@ -8,7 +8,6 @@
     <color name="greySecondary">#8B000000</color>
     <color name="greyDisabled">#61000000</color>
 
-    <color name="selected">#a8cf45</color>
-    <color name="unselected">#ff8cae3b</color>
+    <color name="withish">#e0e0e0</color>
 
 </resources>

@@ -132,7 +132,8 @@ public class MainActivity extends AppCompatActivity {
         AdRequest requestInterstitial = new AdRequest.Builder()
                 .tagForChildDirectedTreatment(true)
                 .addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
-        if (!BuildConfig.DEBUG) mInterstitialAd.loadAd(requestInterstitial);
+//        if (!BuildConfig.DEBUG)
+        mInterstitialAd.loadAd(requestInterstitial);
 
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
@@ -215,9 +216,6 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
 
         int r = random.nextInt(param_nr_docs) + 2;
-        if (BuildConfig.DEBUG) {
-//            r = 225;
-        }
         final String r_s = Integer.toString(r);
         final DocumentReference documentReference = firestore.collection(SIGHTS_AND_SOUNDS_COLLECTION).document(r_s);
         docListenerRegistration = documentReference.addSnapshotListener(new EventListener<DocumentSnapshot>() {
@@ -428,6 +426,7 @@ public class MainActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             log("signInAnonymously:success");
+                            //noinspection unused,unused
                             FirebaseUser user = mAuth.getCurrentUser();
 //                            updateUI(user);-
                             onSignInCompleted();

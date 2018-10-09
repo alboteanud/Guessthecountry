@@ -2,12 +2,15 @@ package com.craiovadata.guessthecountry;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -19,8 +22,8 @@ import butterknife.OnClick;
 public class InfoDialogFragment extends DialogFragment {
 
     public static final String TAG = "InfoDialog";
-    Item item;
-    boolean isImageDescr;
+    private Item item;
+    private boolean isImageDescr;
 
     @BindView(R.id.textView_details)
     TextView textViewDetails;
@@ -28,10 +31,8 @@ public class InfoDialogFragment extends DialogFragment {
     @BindView(R.id.textView_title)
     TextView textViewTitle;
 
-
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater,
+    public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.dialog_info, container, false);
@@ -39,7 +40,7 @@ public class InfoDialogFragment extends DialogFragment {
 
         if (item != null) {
 
-            isImageDescr = getActivity().getPreferences(Context.MODE_PRIVATE).getBoolean("isImageDescr", false);
+            isImageDescr = Objects.requireNonNull(getActivity()).getPreferences(Context.MODE_PRIVATE).getBoolean("isImageDescr", false);
             updateUI(isImageDescr);
         } else
             dismiss();
@@ -49,7 +50,7 @@ public class InfoDialogFragment extends DialogFragment {
     @Override
     public void onResume() {
         super.onResume();
-        getDialog().getWindow().setLayout(
+        Objects.requireNonNull(getDialog().getWindow()).setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
 
@@ -71,7 +72,7 @@ public class InfoDialogFragment extends DialogFragment {
         this.item = item;
     }
 
-    void updateUI(boolean isImageDescr) {
+    private void updateUI(boolean isImageDescr) {
         String title, descr;
         if (isImageDescr) {
             title = "\u263C  \n" + item.getImg_title();
@@ -87,6 +88,6 @@ public class InfoDialogFragment extends DialogFragment {
     @Override
     public void onStop() {
         super.onStop();
-        getActivity().getPreferences(Context.MODE_PRIVATE).edit().putBoolean("isImageDescr", isImageDescr).apply();
+        Objects.requireNonNull(getActivity()).getPreferences(Context.MODE_PRIVATE).edit().putBoolean("isImageDescr", isImageDescr).apply();
     }
 }

@@ -41,14 +41,6 @@
             android:layout_weight="1" />
 
         <Button
-            android:id="@+id/details_switch_button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="More"
-            android:theme="@style/ThemeOverlay.FilterButton" />
-
-        <Button
             android:id="@+id/info_cancel"
             style="@style/Base.Widget.AppCompat.Button.Borderless"
             android:layout_width="0dp"
@@ -57,6 +49,15 @@
             android:text="@string/cancel"
             android:textColor="@color/greySecondary"
             android:theme="@style/ThemeOverlay.FilterButton" />
+
+        <Button
+            android:id="@+id/details_switch_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="More"
+            android:theme="@style/ThemeOverlay.FilterButton" />
+
 
     </LinearLayout>
 
