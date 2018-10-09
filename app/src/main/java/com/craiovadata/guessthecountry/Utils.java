@@ -17,7 +17,7 @@ class Utils {
         int r = random.nextInt(10);
         if (r == 0)
             return "ca-app-pub-3052455927658337/3812605089";
-        else if (r < 3)
+        else if (r < 5)
             return "ca-app-pub-1015344817183694/6453535707";
         return "ca-app-pub-3931793949981809/5906740796";
 

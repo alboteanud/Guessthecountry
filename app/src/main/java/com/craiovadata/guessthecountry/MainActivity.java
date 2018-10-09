@@ -64,13 +64,13 @@ public class MainActivity extends AppCompatActivity {
     private static final int NAME = 1;
     private static final int DELAY_FAB_ACTIVATION = 4 * 1000;
     @BindView(R.id.textFlagA)
-    TextView textViewFlagA;
+    TextView textFlagA;
     @BindView(R.id.textFlagB)
-    TextView textViewFlagB;
+    TextView textFlagB;
     @BindView(R.id.textViewMessageOutput)
-    TextView textViewMessageOutput;
+    TextView outputMessage;
     @BindView(R.id.mainImageView)
-    ImageView imageViewMain;
+    ImageView mainImage;
     @BindView(R.id.flagA)
     ImageButton flagA;
     @BindView(R.id.flagB)
@@ -85,9 +85,6 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton fab;
     @BindView(R.id.btn_info)
     View btnInfo;
-    @BindView(R.id.textViewWellcome)
-    TextView textViewWellcome;
-    String id_test_string = "";
     private MediaPlayer mediaPlayer;
     private Uri soundUri;
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
@@ -103,33 +100,14 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler;
     private Runnable runnableActivateFab;
     private Item item;
-    boolean coin;
-    private int test_id = 215;
-    Runnable runnableShowButtons = new Runnable() {
-        @Override
-        public void run() {
-            if (BuildConfig.DEBUG) id_test_string = " " + Integer.toString(test_id);
-
-            final String[] wrongCountry = getRandomFakeCountry();
-            coin = random.nextBoolean();
-            if (coin) {
-                fetchFlag(flagA, textViewFlagA, item.getCountry_code(), item.getCountry() + id_test_string);
-                fetchFlag(flagB, textViewFlagB, wrongCountry[CODE], wrongCountry[NAME]);
-
-            } else {
-                fetchFlag(flagA, textViewFlagA, wrongCountry[CODE], wrongCountry[NAME]);
-                fetchFlag(flagB, textViewFlagB, item.getCountry_code(), item.getCountry() + id_test_string);
-            }
-        }
-    };
+    private boolean coin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.content_main);
         ButterKnife.bind(this);
         initObjects();
-        showWellcomeUI();
         signInAnonymously();
     }
 
@@ -146,9 +124,9 @@ public class MainActivity extends AppCompatActivity {
     private void initAds() {
         if (mInterstitialAd != null) return;
 
-        MobileAds.initialize(MainActivity.this, "ca-app-pub-3931793949981809~9763575423");
+        MobileAds.initialize(MainActivity.this, getString(R.string.admob_app_id));
 
-        // init interstitial
+        // interstitial
         mInterstitialAd = new InterstitialAd(MainActivity.this);
         mInterstitialAd.setAdUnitId(Utils.getAdUnitId_interstitial(random));
         AdRequest requestInterstitial = new AdRequest.Builder()
@@ -167,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // init banner
+        // banner
         AdRequest requestBanner = new AdRequest.Builder()
                 .tagForChildDirectedTreatment(true)
                 .addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
@@ -238,8 +216,7 @@ public class MainActivity extends AppCompatActivity {
 
         int r = random.nextInt(param_nr_docs) + 2;
         if (BuildConfig.DEBUG) {
-            test_id++;
-            r = test_id;
+//            r = 225;
         }
         final String r_s = Integer.toString(r);
         final DocumentReference documentReference = firestore.collection(SIGHTS_AND_SOUNDS_COLLECTION).document(r_s);
@@ -250,11 +227,11 @@ public class MainActivity extends AppCompatActivity {
                 if (e != null) {
                     log("Listen failed. " + e);
                     Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                    progressBar.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.GONE);
                     return;
                 }
                 if (documentSnapshot != null && documentSnapshot.exists()) {
-                    log("Current id: " + documentSnapshot.getId() + " data:" + documentSnapshot.getData());
+
 
                     Item item = documentSnapshot.toObject(Item.class);
                     if (item != null) {
@@ -262,10 +239,12 @@ public class MainActivity extends AppCompatActivity {
                         docListenerRegistration.remove();
                         onItemLoaded(item);
                     }
+                    log("Current id: " + documentSnapshot.getId() + " data:" + documentSnapshot.getData());
+
 
                 } else {
                     log("Current data: null");
-                    progressBar.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.GONE);
                 }
 
             }
@@ -274,51 +253,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showWellcomeUI() {
-        btnSound.setVisibility(View.INVISIBLE);
-        btnInfo.setVisibility(View.INVISIBLE);
-
-        GlideApp.with(this).clear(imageViewMain);
-        GlideApp.with(this).clear(flagA);
-        GlideApp.with(this).clear(flagB);
-
-        flagA.setVisibility(View.INVISIBLE);
-        flagB.setVisibility(View.INVISIBLE);
-        imageViewMain.setVisibility(View.INVISIBLE);
-
-        textViewMessageOutput.setText(null);
-        textViewFlagA.setText(null);
-        textViewFlagB.setText(null);
+        fab.hide();
+        textFlagA.setVisibility(View.GONE);
+        flagA.setVisibility(View.GONE);
+        textFlagB.setVisibility(View.GONE);
+        flagB.setVisibility(View.GONE);
+        btnSound.setVisibility(View.GONE);
+        btnInfo.setVisibility(View.GONE);
+        outputMessage.setVisibility(View.GONE);
+        mainImage.setVisibility(View.GONE);
         if (mediaPlayer != null)
             mediaPlayer.reset();
-        fab.hide();
-        textViewWellcome.setVisibility(View.VISIBLE);
-
     }
 
     private void fetchImage() {
         StorageReference imgRef = item.getImgRef(storage);
         StorageReference thumbRef = item.getThumbRef(storage);
 
-        GlideApp.with(this)
+        GlideApp.with(getApplicationContext()).clear(mainImage);
+        mainImage.setVisibility(View.VISIBLE);
+
+        GlideApp.with(getApplicationContext())
                 .load(imgRef)
                 .addListener(new RequestListener<Drawable>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                        progressBar.setVisibility(View.INVISIBLE);
+                        progressBar.setVisibility(View.GONE);
                         return false;
                     }
 
                     @Override
                     public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        hideWellcomeUI();
-                        updateButtons();
+                        progressBar.setVisibility(View.GONE);
                         fetchMusicUrl();
+                        updateButtons();
                         return false;
                     }
                 })
                 .thumbnail(GlideApp.with(this).load(thumbRef))
                 .transition(GenericTransitionOptions.with(R.anim.zoom_in))
-                .into(imageViewMain);
+                .into(mainImage);
 
 
     }
@@ -327,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
         String flagLocation = "flags_jpg/" + code + ".jpg";
         StorageReference flagRef = storage.getReference(flagLocation);
 
-        GlideApp.with(this)
+        GlideApp.with(getApplicationContext())
                 .load(flagRef)
                 .addListener(new RequestListener<Drawable>() {
                     @Override
@@ -340,18 +314,27 @@ public class MainActivity extends AppCompatActivity {
                     public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
                         imageButton.setVisibility(View.VISIBLE);
                         textView.setText(countryName);
+                        textView.setVisibility(View.VISIBLE);
                         return false;
                     }
                 })
-                .transition(GenericTransitionOptions.with(R.anim.zoom_in))
+//                .transition(GenericTransitionOptions.with(R.anim.zoom_in))
                 .into(imageButton);
 
     }
 
     private void updateButtons() {
 
-        handler.removeCallbacks(runnableShowButtons);
-        handler.postDelayed(runnableShowButtons, 2000);
+        final String[] wrongCountry = getRandomFakeCountry();
+        coin = random.nextBoolean();
+        if (coin) {
+            fetchFlag(flagA, textFlagA, item.getCountry_code(), item.getCountry());
+            fetchFlag(flagB, textFlagB, wrongCountry[CODE], wrongCountry[NAME]);
+
+        } else {
+            fetchFlag(flagA, textFlagA, wrongCountry[CODE], wrongCountry[NAME]);
+            fetchFlag(flagB, textFlagB, item.getCountry_code(), item.getCountry());
+        }
 
     }
 
@@ -377,12 +360,6 @@ public class MainActivity extends AppCompatActivity {
         }
         log("fake country: " + fakeCountry[CODE] + " " + fakeCountry[NAME] + " " + random.toString());
         return fakeCountry;
-    }
-
-    private void hideWellcomeUI() {
-        progressBar.setVisibility(View.INVISIBLE);
-        textViewWellcome.setVisibility(View.INVISIBLE);
-        imageViewMain.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -516,6 +493,7 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick({R.id.flagA, R.id.flagB})
     public void onFlagClick(View v) {
+        if (item == null) return;
         String outputMessage;
         int id = v.getId();
         if ((coin && id == R.id.flagA) || (!coin && id == R.id.flagB)) {
@@ -525,7 +503,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
             outputMessage = String.format(getString(R.string.output_message_wrong_answer), item.getCountry());
         }
-        textViewMessageOutput.setText(outputMessage);
+        this.outputMessage.setText(outputMessage);
+        if (this.outputMessage.getVisibility() != View.VISIBLE) {
+            this.outputMessage.setVisibility(View.VISIBLE);
+        }
+
 
     }
 

@@ -4,4 +4,5 @@
     <string name="output_message_wrong_answer">Nope! The correct answer is %1$s</string>
     <string name="country_image">An image from this country</string>
     <string name="cancel">Cancel</string>
+    <string name="admob_app_id">ca-app-pub-3931793949981809~9763575423</string>
 </resources>
