@@ -11,16 +11,14 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.GenericTransitionOptions;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
@@ -74,19 +72,15 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.mainImageView)
     ImageView imageViewMain;
     @BindView(R.id.flagA)
-    ImageView flagA;
+    ImageButton flagA;
     @BindView(R.id.flagB)
-    ImageView flagB;
+    ImageButton flagB;
     @BindView(R.id.adView)
     AdView adView;
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
     @BindView(R.id.btn_play_music)
     View btnSound;
-    @BindView(R.id.buttonA)
-    View btnA;
-    @BindView(R.id.buttonB)
-    View btnB;
     @BindView(R.id.fab)
     FloatingActionButton fab;
     @BindView(R.id.btn_info)
@@ -109,7 +103,25 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler;
     private Runnable runnableActivateFab;
     private Item item;
-    private int test_id = 155;
+    boolean coin;
+    private int test_id = 215;
+    Runnable runnableShowButtons = new Runnable() {
+        @Override
+        public void run() {
+            if (BuildConfig.DEBUG) id_test_string = " " + Integer.toString(test_id);
+
+            final String[] wrongCountry = getRandomFakeCountry();
+            coin = random.nextBoolean();
+            if (coin) {
+                fetchFlag(flagA, textViewFlagA, item.getCountry_code(), item.getCountry() + id_test_string);
+                fetchFlag(flagB, textViewFlagB, wrongCountry[CODE], wrongCountry[NAME]);
+
+            } else {
+                fetchFlag(flagA, textViewFlagA, wrongCountry[CODE], wrongCountry[NAME]);
+                fetchFlag(flagB, textViewFlagB, item.getCountry_code(), item.getCountry() + id_test_string);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,32 +129,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         initObjects();
-//        Toolbar toolbar = findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
-        cleanUI();
+        showWellcomeUI();
         signInAnonymously();
-
-        if (BuildConfig.DEBUG) {
-            addTestBtn();
-        }
-    }
-
-    private void addTestBtn() {
-        Button crashButton = new Button(this);
-        crashButton.setText("<");
-        crashButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                test_id -= 2;
-                cleanUI();
-                fetchRandomDocument();
-            }
-        });
-
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.gravity = Gravity.START;
-        addContentView(crashButton, layoutParams);
     }
 
     @OnClick({R.id.fab})
@@ -150,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         if (mInterstitialAd != null && mInterstitialAd.isLoaded() && fabClicks++ > 4 + random.nextInt(4)) {
             mInterstitialAd.show(); // interstitial will not load in debug mode
         } else {
-            cleanUI();
+            showWellcomeUI();
             fetchRandomDocument();
         }
     }
@@ -171,8 +159,8 @@ public class MainActivity extends AppCompatActivity {
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
             public void onAdClosed() {
-                // Code to be executed when when the interstitial ad is closed.
-                cleanUI();
+                // Code to be executed when the interstitial ad is closed.
+                showWellcomeUI();
                 fetchRandomDocument();
                 mInterstitialAd.loadAd(new AdRequest.Builder().build());
                 fabClicks = 0;
@@ -185,28 +173,6 @@ public class MainActivity extends AppCompatActivity {
                 .addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
         adView.loadAd(requestBanner);
 
-    }
-
-    private void initObjects() {
-        random = new Random();
-        handler = new Handler();
-        runnableActivateFab = new Runnable() {
-            @Override
-            public void run() {
-//                activateFab(true);
-                fab.show();
-            }
-        };
-        countries = getResources().obtainTypedArray(R.array.countrycodes);
-
-        mAuth = FirebaseAuth.getInstance();
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-        firestore = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build();
-        firestore.setFirestoreSettings(settings);
-        storage = FirebaseStorage.getInstance();
     }
 
     private void onSignInCompleted() {
@@ -237,22 +203,27 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void cleanUI() {
-        btnSound.setVisibility(View.INVISIBLE);
-        btnInfo.setVisibility(View.INVISIBLE);
+    private void initObjects() {
+        random = new Random();
+        handler = new Handler();
+        runnableActivateFab = new Runnable() {
+            @Override
+            public void run() {
+//                activateFab(true);
+                fab.show();
+            }
+        };
+        countries = getResources().obtainTypedArray(R.array.countrycodes);
 
-        GlideApp.with(this).clear(imageViewMain);
-        GlideApp.with(this).clear(flagA);
-        GlideApp.with(this).clear(flagB);
 
-        textViewMessageOutput.setText(null);
-        textViewFlagA.setText(null);
-        textViewFlagB.setText(null);
-        if (mediaPlayer != null)
-            mediaPlayer.reset();
-        fab.hide();
-        textViewWellcome.setVisibility(View.VISIBLE);
-
+        mAuth = FirebaseAuth.getInstance();
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        firestore = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        firestore.setFirestoreSettings(settings);
+        storage = FirebaseStorage.getInstance();
     }
 
     private void lateActivateFab() {
@@ -302,43 +273,57 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void updateButtons() {
-        if (BuildConfig.DEBUG) id_test_string = " " + Integer.toString(test_id);
+    private void showWellcomeUI() {
+        btnSound.setVisibility(View.INVISIBLE);
+        btnInfo.setVisibility(View.INVISIBLE);
 
-        final String[] wrongCountry = getRandomFakeCountry();
-        final boolean coin = random.nextBoolean();
-        if (coin) {
-            btnA.setTag(true);
-            btnB.setTag(null);
+        GlideApp.with(this).clear(imageViewMain);
+        GlideApp.with(this).clear(flagA);
+        GlideApp.with(this).clear(flagB);
 
-            fetchFlag(flagA, textViewFlagA, item.getCountry_code(), item.getCountry() + id_test_string);
-            fetchFlag(flagB, textViewFlagB, wrongCountry[CODE], wrongCountry[NAME]);
-            if (BuildConfig.DEBUG) {
-                performLateClick(flagA);
-            }
+        flagA.setVisibility(View.INVISIBLE);
+        flagB.setVisibility(View.INVISIBLE);
+        imageViewMain.setVisibility(View.INVISIBLE);
 
-        } else {
-            btnA.setTag(null);
-            btnB.setTag(true);
+        textViewMessageOutput.setText(null);
+        textViewFlagA.setText(null);
+        textViewFlagB.setText(null);
+        if (mediaPlayer != null)
+            mediaPlayer.reset();
+        fab.hide();
+        textViewWellcome.setVisibility(View.VISIBLE);
 
-            fetchFlag(flagA, textViewFlagA, wrongCountry[CODE], wrongCountry[NAME]);
-            fetchFlag(flagB, textViewFlagB, item.getCountry_code(), item.getCountry() + id_test_string);
-            if (BuildConfig.DEBUG) {
-                performLateClick(flagB);
-            }
-        }
     }
 
-    private void performLateClick(final ImageView flagA) {
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                onFlagClick(flagA);
-            }
-        }, 2000);
+    private void fetchImage() {
+        StorageReference imgRef = item.getImgRef(storage);
+        StorageReference thumbRef = item.getThumbRef(storage);
+
+        GlideApp.with(this)
+                .load(imgRef)
+                .addListener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        progressBar.setVisibility(View.INVISIBLE);
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        hideWellcomeUI();
+                        updateButtons();
+                        fetchMusicUrl();
+                        return false;
+                    }
+                })
+                .thumbnail(GlideApp.with(this).load(thumbRef))
+                .transition(GenericTransitionOptions.with(R.anim.zoom_in))
+                .into(imageViewMain);
+
+
     }
 
-    private void fetchFlag(ImageView imageView, final TextView textView, String code, final String countryName) {
+    private void fetchFlag(final ImageButton imageButton, final TextView textView, String code, final String countryName) {
         String flagLocation = "flags_jpg/" + code + ".jpg";
         StorageReference flagRef = storage.getReference(flagLocation);
 
@@ -347,16 +332,26 @@ public class MainActivity extends AppCompatActivity {
                 .addListener(new RequestListener<Drawable>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+
                         return false;
                     }
 
                     @Override
                     public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        imageButton.setVisibility(View.VISIBLE);
                         textView.setText(countryName);
                         return false;
                     }
                 })
-                .into(imageView);
+                .transition(GenericTransitionOptions.with(R.anim.zoom_in))
+                .into(imageButton);
+
+    }
+
+    private void updateButtons() {
+
+        handler.removeCallbacks(runnableShowButtons);
+        handler.postDelayed(runnableShowButtons, 2000);
 
     }
 
@@ -384,34 +379,10 @@ public class MainActivity extends AppCompatActivity {
         return fakeCountry;
     }
 
-    private void fetchImage() {
-        StorageReference imgRef = item.getImgRef(storage);
-        StorageReference thumbRef = item.getThumbRef(storage);
-
-        GlideApp.with(this)
-                .load(imgRef)
-                .addListener(new RequestListener<Drawable>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                        progressBar.setVisibility(View.INVISIBLE);
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        progressBar.setVisibility(View.INVISIBLE);
-                        textViewWellcome.setVisibility(View.INVISIBLE);
-                        updateButtons();
-                        fetchMusicUrl();
-                        return false;
-                    }
-                })
-                .thumbnail(GlideApp.with(this).load(thumbRef))
-//                .transition(DrawableTransitionOptions.withCrossFade())
-//                .placeholder(R.drawable.ic_wellcome_collage)
-                .into(imageViewMain);
-
-
+    private void hideWellcomeUI() {
+        progressBar.setVisibility(View.INVISIBLE);
+        textViewWellcome.setVisibility(View.INVISIBLE);
+        imageViewMain.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -471,22 +442,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @OnClick({R.id.buttonA, R.id.buttonB})
-    public void onFlagClick(View v) {
-        Object tag = v.getTag();
-        String outputMessage;
-        if (tag == null) {
-            outputMessage = String.format(getString(R.string.output_message_wrong_answer), item.getCountry());
-        } else {
-            outputMessage = String.format(getString(R.string.output_message_correct_answer), item.getCountry(), item.getImg_title());
-            btnInfo.setVisibility(View.VISIBLE);
-        }
-//        textViewMessageOutput.setText(null);
-//        textViewMessageOutput.setTextAppearance(R.style.AppTheme_Body1);
-        textViewMessageOutput.setText(outputMessage);
-
-    }
-
     private void signInAnonymously() {
 
         mAuth.signInAnonymously()
@@ -497,7 +452,7 @@ public class MainActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             log("signInAnonymously:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-//                            updateUI(user);
+//                            updateUI(user);-
                             onSignInCompleted();
                         } else {
                             // If sign in fails, display a message to the user.
@@ -559,5 +514,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @OnClick({R.id.flagA, R.id.flagB})
+    public void onFlagClick(View v) {
+        String outputMessage;
+        int id = v.getId();
+        if ((coin && id == R.id.flagA) || (!coin && id == R.id.flagB)) {
+            outputMessage = String.format(getString(R.string.output_message_correct_answer), item.getCountry(), item.getImg_title());
+            btnInfo.setVisibility(View.VISIBLE);
+
+        } else {
+            outputMessage = String.format(getString(R.string.output_message_wrong_answer), item.getCountry());
+        }
+        textViewMessageOutput.setText(outputMessage);
+
+    }
 
 }
